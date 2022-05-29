@@ -12,15 +12,15 @@ depending on versions of FrSky hardware OS.  I needed to also use the vario
 height data for altitude because GPS height data is inherently not as accurate
 as GPS height data.  This is an optional thing to do.
 
-.PARAMETER filename
+.PARAMETER Filename
 Source FrSky GPS log filename  (usually ends in .csv)
 
-.PARAMETER use-vario-height
+.PARAMETER UseVarioHeight
 Option to use the vario height data instead of the GPS height data... assuming
 you also have verio data in the logs.
 
 .EXAMPLE
-powershell Frsky2Gpx.ps1 -use-vario-height -filename "Arctus-2022-01-21-13-40-00.csv
+powershell Frsky2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.csv
 
 .NOTES
 Author: Adam Gibson  (StatiC) on rcgroups
