@@ -11,6 +11,7 @@ You can use it like this...
 Frsky2Gpx.ps1 -UseVarioHeight -Filename "C:\Users\Someuser\Documents\Arctus-2022-01-21-13-40-00.csv
 
 -Filename is the input FrSky logfile
+
 -UseVarioHeight tells the script not to use the GPS height data and to use the vario height data instead.
 
 The output .gpx file will be placed in the same directory as the source file.
