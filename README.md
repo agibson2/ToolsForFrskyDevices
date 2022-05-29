@@ -15,3 +15,5 @@ Frsky2Gpx.ps1 -UseVarioHeight -Filename "C:\Users\Someuser\Documents\Arctus-2022
 -UseVarioHeight tells the script not to use the GPS height data and to use the vario height data instead.
 
 The output .gpx file will be placed in the same directory as the source file.
+
+You can use the -Debug option to get more verbose output.
