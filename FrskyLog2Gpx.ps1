@@ -1,6 +1,6 @@
 ﻿<#
 .VERSION
-1.0.3
+1.0.4
 
 .SYNOPSIS
 FrSkyLog2Gpx.ps1 - Convert a frsky log to GPX GPS format for use on sites like https://ayvri.com
@@ -26,6 +26,10 @@ powershell Frsky2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.c
 Author: Adam Gibson  (StatiC) on rcgroups
 
 .CHANGELOG
+2022-05-29 1.0.4
+ Spelling error with Latitude in debug output
+ Catch EXCEPTION trying to convert date and time
+ Change output to show loading file and then start of converting
 2022-05-29 1.0.3
  Major problems with detecting of some columns fixed
  Minor spelling
@@ -60,7 +64,7 @@ $basename = ([io.fileinfo]"$Filename").Basename
 $directory = ([io.fileinfo]"$Filename").Directory
 $OutputFile = "$directory\$basename.gpx"
 
-write-output "Converting $Filename to GPX format"
+write-output "Loading '$Filename' to determine columns"
 
 $InCsv = Import-csv -Path $Filename
 
@@ -143,7 +147,7 @@ if ($DebugPreference) { write-output "Conversion from feet to meters = $ConvertT
 if ($DebugPreference) { write-output "Using '$AltKey' for Altitude" }
 if ($DebugPreference) {
 	if ($GPSKey -ne "") {
-		write-output "Using '$GPSKey' for Longitude and Lattitude"
+		write-output "Using '$GPSKey' for Longitude and Latitude"
 	} else {
 		write-output "Using '$LongitudeKey' for Longitude"
 		write-output "Using '$LatitudeKey' for Latitude"
@@ -165,6 +169,8 @@ $NextDot = $DotInterval
 $Count = 1
 $PercentDone = 0
 
+write-output "Converting '$Filename' to GPX format"
+
 ForEach ($CsvLine in $InCsv) {
 	if($GPSInSingleColumn) {
 		$lon, $lat = $CsvLine.$GPSKey -Split (" ")
@@ -180,8 +186,18 @@ ForEach ($CsvLine in $InCsv) {
 
     $time = $CsvLine.Time
     $date = $CsvLine.Date
-    $dateandtime = ([datetime]::ParseExact("$date $time", "yyyy-MM-dd HH:mm:ss.fff", $null)).ToUniversalTime()
-    $dateandtimestr = $dateandtime.ToString('yyyy-MM-ddTHH:mm:ss.ff')
+	try {
+	$dateandtime = ([datetime]::ParseExact("$date $time", "yyyy-MM-dd HH:mm:ss.fff", $null)).ToUniversalTime()
+		write-output "EXCEPTION: Could not parse date and time '$date $time' using 'yyyy-MM-dd HH:mm:ss.fff' format"
+	$dateandtimestr = $dateandtime.ToString('yyyy-MM-ddTHH:mm:ss.ff')
+	}
+	catch [System.FormatException] {
+		"EXCEPTION: Could not convert date and time '$date $time' using 'yyyy-MM-dd HH:mm:ss.fff' format."
+		write-output "           Verify that the FrSky logfile Time column has the correct time data in it."
+		write-output "           The only valid format known as an example is '2022-05-30 14:23:04.243'"
+		exit 1
+	}
+	
     [void]$OutString.Append("      <trkpt lat=`"$lat`" lon=`"$lon`">")
     [void]$OutString.Append("<ele>$eledbl</ele>")
 	[void]$OutString.Append("<time>${dateandtimestr}Z</time>")
@@ -203,4 +219,4 @@ ForEach ($CsvLine in $InCsv) {
 $OutString2 = $OutString.ToString()
 
 write-output $OutString2 | out-file -encoding utf8 $OutputFile
-write-output "GPX file written to $OutputFile"
+write-output "GPX file written to '$OutputFile'"
