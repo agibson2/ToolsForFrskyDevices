@@ -1,6 +1,6 @@
 ﻿<#
 .VERSION
-1.0.2
+1.0.3
 
 .SYNOPSIS
 FrSkyLog2Gpx.ps1 - Convert a frsky log to GPX GPS format for use on sites like https://ayvri.com
@@ -17,7 +17,7 @@ Source FrSky GPS log filename  (usually ends in .csv)
 
 .PARAMETER UseVarioHeight
 Option to use the vario height data instead of the GPS height data... assuming
-you also have verio data in the logs.
+you also have vario data in the logs.
 
 .EXAMPLE
 powershell Frsky2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.csv
@@ -26,6 +26,10 @@ powershell Frsky2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.c
 Author: Adam Gibson  (StatiC) on rcgroups
 
 .CHANGELOG
+2022-05-29 1.0.3
+ Major problems with detecting of some columns fixed
+ Minor spelling
+ Made some output text only show if -debug option used
 2022-05-29 1.0.2
  Added use-vario-height option to use the vario height data (instead of hard coding it)
 2022-02-13 1.0.1
@@ -70,60 +74,81 @@ $LatitudeFound = $False
 $LatitudeKey = ""
 $LongitudeFound = $False
 $LongitudeKey = ""
+$GPSKey = ""
 
 $ConvertToMeters = $False
+$ColumnUsed = $False
 
 $AltLabels = Get-member -InputObject $InCsv[0] | Where-Object {$_.MemberType -eq "NoteProperty"} | select-Object Name
 ForEach ($AltLabel in $AltLabels) {
-    if ($UseVarioHeight -and ($AltLabel.Name -eq 'Alt(ft)') -or ($AltLabel.Name -eq 'Altitude(ft)')) {
-		write-output "Detecting Alt(ft)"
+    if ( $UseVarioHeight -and (($AltLabel.Name -eq 'Alt(ft)') -or ($AltLabel.Name -eq 'Altitude(ft)')) ) {
         $AltFeet = $True
 		$AltKey = $AltLabel.Name
 		$ConvertToMeters = $True
-    } elseif ($UseVarioHeight -and ($AltLabel.Name -eq 'Alt(m)') -or ($AltLabel.Name -eq 'Altitude(ft)')) {
-		write-output "Detecting Alt(m)"
+		$ColumnUsed = $True
+    } elseif ( $UseVarioHeight -and (($AltLabel.Name -eq 'Alt(m)') -or ($AltLabel.Name -eq 'Altitude(ft)')) ) {
         $AltMeters = $True
 		$AltKey = $AltLabel.Name
-    } elseif (-Not $UseVarioHeight -and ($AltLabel.Name -eq 'GAlt(m)') -or ($AltLabel.Name -eq 'GPS Alt(m)')){
-		write-output "Detecting GAlt(ft)"
+		$ColumnUsed = $True
+    } elseif ( -Not $UseVarioHeight -and (($AltLabel.Name -eq 'GAlt(m)') -or ($AltLabel.Name -eq 'GPS Alt(m)')) ){
         $GAltMeters = $True
-		$AltKey = $AltLabal.Name
-    } elseif (-Not $UseVarioHeight -and ($AltLabel.Name -eq 'GAlt(ft)') -or ($AltLabel.Name -eq 'GPS Alt(ft)')){
-		write-output "Detecting GAlt(ft)"
+		$AltKey = $AltLabel.Name
+		$ColumnUsed = $True
+    } elseif ( -Not $UseVarioHeight -and (($AltLabel.Name -eq 'GAlt(ft)') -or ($AltLabel.Name -eq 'GPS Alt(ft)')) ){
         $GAltFeet = $True
 		$AltKey = $AltLabel.Name
 		$ConvertToMeters = $True
+		$ColumnUsed = $True
 	} elseif ($altLabel.Name -eq 'GPS') {
 		$GpsInSingleColumn = $True
 		$GPSKey = $altLabel.Name
+		$ColumnUsed = $True
 	} elseif ($altLabel.Name -eq 'Longitude') {
 		$LongitudeKey = $altLabel.Name
+		$ColumnUsed = $True
 	} elseif ($altLabel.Name -eq 'Latitude') {
 		$LatitudeKey = $altLabel.Name
+		$ColumnUsed = $True
 	}
-    If ($DebugPreference) { write-output "Column Name found: $($AltLabel.Name)" }
+	
+    If ($DebugPreference) {
+		if( $ColumnUsed -eq $True) {
+			write-output "Using column $($AltLabel.Name)"
+		} else {
+			write-output "Skipping column $($AltLabel.Name)"
+		}
+	}
+	
+	$ColumnUsed = $False
 }
 
 if ( $AltKey -eq "" ) {
 	if( $UseVarioHeight ) {
-		write-output "Did not detect any of Alt(ft), Alt(m) columns"
+		write-output "Did not detect any of Alt(ft), Alt(m) columns to use for altitude from vario/altimeter."
 	} else {
-		write-output "Did not detect any of GAlt(ft), or GAlt(m) columns"
+		write-output "Did not detect GAlt(ft) or GAlt(m) columns to use for altitude from GPS sensor."
 	}
 	
-    write-output "Are you sure this is a FrSky radio logfile or have you renamed the sensors to something else?"
+    write-output "Are you sure this is a FrSky radio logfile? Is altimeter/vario data in the logs? Have you renamed the sensors to something else?"
     exit 1
 }
 
-if ( ($GPSKey -eq "") -or (($LatitudeKey -eq "") -or ($LongitudeKey -eq "")) ) {
-	if ($DebugPreference) { write-output "GPSKey=$GPSKey LatitudeKey=$LatitudeKey LongitudeKey=$LongitudeKey" }
+if ( ($GPSKey -eq "") -and (($LatitudeKey -eq "") -or ($LongitudeKey -eq "")) ) {
 	write-output "Did not find GPS, Lattitude, or Longitude columns"
-    write-output "Are you sure this is a FrSky radio logfile or have you renamed the sensors to something else?"
+    write-output "Are you sure this is a FrSky radio logfile? Is GPS in the logs?  Have you renamed the sensors to something else?"
 	exit 1
 }
 
 if ($DebugPreference) { write-output "Conversion from feet to meters = $ConvertToMeters" }
 if ($DebugPreference) { write-output "Using '$AltKey' for Altitude" }
+if ($DebugPreference) {
+	if ($GPSKey -ne "") {
+		write-output "Using '$GPSKey' for Longitude and Lattitude"
+	} else {
+		write-output "Using '$LongitudeKey' for Longitude"
+		write-output "Using '$LatitudeKey' for Latitude"
+	}
+}
 
 $DotInterval = $InCsv.Count / 100
 
