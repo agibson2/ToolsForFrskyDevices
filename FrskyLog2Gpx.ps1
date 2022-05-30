@@ -1,7 +1,4 @@
 ﻿<#
-.VERSION
-1.0.4
-
 .SYNOPSIS
 FrSkyLog2Gpx.ps1 - Convert a frsky log to GPX GPS format for use on sites like https://ayvri.com
 
@@ -20,12 +17,16 @@ Option to use the vario height data instead of the GPS height data... assuming
 you also have vario data in the logs.
 
 .EXAMPLE
-powershell Frsky2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.csv
+Frsky2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.csv
+
+.LINK
+https://github.com/agibson2/ToolsForFrskyDevices
 
 .NOTES
 Author: Adam Gibson  (StatiC) on rcgroups
 
-.CHANGELOG
+2022-05-29 1.0.5
+ Fix  get-help FrskyLog2Gpx.ps1
 2022-05-29 1.0.4
  Spelling error with Latitude in debug output
  Catch EXCEPTION trying to convert date and time
