@@ -36,7 +36,7 @@ Author: Adam Gibson  (StatiC) on rcgroups
  Minor spelling
  Made some output text only show if -debug option used
 2022-05-29 1.0.2
- Added use-vario-height option to use the vario height data (instead of hard coding it)
+ Added -UseVarioHeight option to use the vario/altimeter height data (instead of GPS altitude)
 2022-02-13 1.0.1
  Added Ethos logfile compatibility
 2019-08-23 1.0.0
