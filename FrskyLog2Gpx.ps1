@@ -25,6 +25,8 @@ https://github.com/agibson2/ToolsForFrskyDevices
 .NOTES
 Author: Adam Gibson  (StatiC) on rcgroups
 
+2022-05-31 1.0.7
+ Major fix for OpenTX GPS column formatted logfiles to flip latitude and longitude assignment of the combined GPS column data
 2022-05-30 1.0.6
  Fixed writing an exception error when it should not have
 2022-05-29 1.0.5
@@ -176,7 +178,7 @@ write-output "Converting '$Filename' to GPX format"
 
 ForEach ($CsvLine in $InCsv) {
     if($GPSInSingleColumn) {
-        $lon, $lat = $CsvLine.$GPSKey -Split (" ")
+        $lat, $lon = $CsvLine.$GPSKey -Split (" ")
     } else {
         $lon = $CsvLine.$LongitudeKey
         $lat = $CsvLine.$LatitudeKey
