@@ -16,3 +16,5 @@ Frsky2Gpx.ps1 -UseVarioHeight -Filename "C:\Users\Someuser\Documents\Arctus-2022
 The output .gpx file will be placed in the same directory as the source file.
 
 You can use the -Debug option to get more verbose output.
+
+This script doesn't do any kind of filtering on the actual data.  On first aquisition of GPS, the accuracy can be rather low because it doesn't have as many satelites yet.  You might see it show GPS data somewhere else until it gets a better lock on more satellites.  I currently manually remove that initial data from the logfiles before converting it.  I might look into some kind of analysis of the data to remove any data way outside of the area of the majority of the data.  I haven't decided to tackle that yet.  The script currently just parses one line at a time without any future or past point data.
