@@ -25,6 +25,8 @@ https://github.com/agibson2/ToolsForFrskyDevices
 .NOTES
 Author: Adam Gibson  (StatiC) on rcgroups
 
+2022-05-30 1.0.6
+ Fixed writing an exception error when it should not have
 2022-05-29 1.0.5
  Fix  get-help FrskyLog2Gpx.ps1
 2022-05-29 1.0.4
@@ -46,7 +48,7 @@ Author: Adam Gibson  (StatiC) on rcgroups
 #>
 
 param(
-	[Parameter(Mandatory=$true, HelpMessage="FrSky log filename")] [string]$filename,
+    [Parameter(Mandatory=$true, HelpMessage="FrSky log filename")] [string]$filename,
     [Parameter(HelpMessage="Use vario height data instead of GPS height data")] [switch]$UseVarioHeight
 )
 
@@ -88,71 +90,71 @@ $AltLabels = Get-member -InputObject $InCsv[0] | Where-Object {$_.MemberType -eq
 ForEach ($AltLabel in $AltLabels) {
     if ( $UseVarioHeight -and (($AltLabel.Name -eq 'Alt(ft)') -or ($AltLabel.Name -eq 'Altitude(ft)')) ) {
         $AltFeet = $True
-		$AltKey = $AltLabel.Name
-		$ConvertToMeters = $True
-		$ColumnUsed = $True
+        $AltKey = $AltLabel.Name
+        $ConvertToMeters = $True
+        $ColumnUsed = $True
     } elseif ( $UseVarioHeight -and (($AltLabel.Name -eq 'Alt(m)') -or ($AltLabel.Name -eq 'Altitude(ft)')) ) {
         $AltMeters = $True
-		$AltKey = $AltLabel.Name
-		$ColumnUsed = $True
+        $AltKey = $AltLabel.Name
+        $ColumnUsed = $True
     } elseif ( -Not $UseVarioHeight -and (($AltLabel.Name -eq 'GAlt(m)') -or ($AltLabel.Name -eq 'GPS Alt(m)')) ){
         $GAltMeters = $True
-		$AltKey = $AltLabel.Name
-		$ColumnUsed = $True
+        $AltKey = $AltLabel.Name
+        $ColumnUsed = $True
     } elseif ( -Not $UseVarioHeight -and (($AltLabel.Name -eq 'GAlt(ft)') -or ($AltLabel.Name -eq 'GPS Alt(ft)')) ){
         $GAltFeet = $True
-		$AltKey = $AltLabel.Name
-		$ConvertToMeters = $True
-		$ColumnUsed = $True
-	} elseif ($altLabel.Name -eq 'GPS') {
-		$GpsInSingleColumn = $True
-		$GPSKey = $altLabel.Name
-		$ColumnUsed = $True
-	} elseif ($altLabel.Name -eq 'Longitude') {
-		$LongitudeKey = $altLabel.Name
-		$ColumnUsed = $True
-	} elseif ($altLabel.Name -eq 'Latitude') {
-		$LatitudeKey = $altLabel.Name
-		$ColumnUsed = $True
-	}
-	
+        $AltKey = $AltLabel.Name
+        $ConvertToMeters = $True
+        $ColumnUsed = $True
+    } elseif ($altLabel.Name -eq 'GPS') {
+        $GpsInSingleColumn = $True
+        $GPSKey = $altLabel.Name
+        $ColumnUsed = $True
+    } elseif ($altLabel.Name -eq 'Longitude') {
+        $LongitudeKey = $altLabel.Name
+        $ColumnUsed = $True
+    } elseif ($altLabel.Name -eq 'Latitude') {
+        $LatitudeKey = $altLabel.Name
+        $ColumnUsed = $True
+    }
+    
     If ($DebugPreference) {
-		if( $ColumnUsed -eq $True) {
-			write-output "Using column $($AltLabel.Name)"
-		} else {
-			write-output "Skipping column $($AltLabel.Name)"
-		}
-	}
-	
-	$ColumnUsed = $False
+        if( $ColumnUsed -eq $True) {
+            write-output "Using column $($AltLabel.Name)"
+        } else {
+            write-output "Skipping column $($AltLabel.Name)"
+        }
+    }
+    
+    $ColumnUsed = $False
 }
 
 if ( $AltKey -eq "" ) {
-	if( $UseVarioHeight ) {
-		write-output "Did not detect any of Alt(ft), Alt(m) columns to use for altitude from vario/altimeter."
-	} else {
-		write-output "Did not detect GAlt(ft) or GAlt(m) columns to use for altitude from GPS sensor."
-	}
-	
+    if( $UseVarioHeight ) {
+        write-output "Did not detect any of Alt(ft), Alt(m) columns to use for altitude from vario/altimeter."
+    } else {
+        write-output "Did not detect GAlt(ft) or GAlt(m) columns to use for altitude from GPS sensor."
+    }
+    
     write-output "Are you sure this is a FrSky radio logfile? Is altimeter/vario data in the logs? Have you renamed the sensors to something else?"
     exit 1
 }
 
 if ( ($GPSKey -eq "") -and (($LatitudeKey -eq "") -or ($LongitudeKey -eq "")) ) {
-	write-output "Did not find GPS, Lattitude, or Longitude columns"
+    write-output "Did not find GPS, Lattitude, or Longitude columns"
     write-output "Are you sure this is a FrSky radio logfile? Is GPS in the logs?  Have you renamed the sensors to something else?"
-	exit 1
+    exit 1
 }
 
 if ($DebugPreference) { write-output "Conversion from feet to meters = $ConvertToMeters" }
 if ($DebugPreference) { write-output "Using '$AltKey' for Altitude" }
 if ($DebugPreference) {
-	if ($GPSKey -ne "") {
-		write-output "Using '$GPSKey' for Longitude and Latitude"
-	} else {
-		write-output "Using '$LongitudeKey' for Longitude"
-		write-output "Using '$LatitudeKey' for Latitude"
-	}
+    if ($GPSKey -ne "") {
+        write-output "Using '$GPSKey' for Longitude and Latitude"
+    } else {
+        write-output "Using '$LongitudeKey' for Longitude"
+        write-output "Using '$LatitudeKey' for Latitude"
+    }
 }
 
 $DotInterval = $InCsv.Count / 100
@@ -173,12 +175,12 @@ $PercentDone = 0
 write-output "Converting '$Filename' to GPX format"
 
 ForEach ($CsvLine in $InCsv) {
-	if($GPSInSingleColumn) {
-		$lon, $lat = $CsvLine.$GPSKey -Split (" ")
-	} else {
-		$lon = $CsvLine.$LongitudeKey
-		$lat = $CsvLine.$LatitudeKey
-	}
+    if($GPSInSingleColumn) {
+        $lon, $lat = $CsvLine.$GPSKey -Split (" ")
+    } else {
+        $lon = $CsvLine.$LongitudeKey
+        $lat = $CsvLine.$LatitudeKey
+    }
     $eledbl = [double] $CsvLine.$AltKey
     if ( $ConvertToMeters -eq $True ) {
         # Convert to meters
@@ -187,21 +189,21 @@ ForEach ($CsvLine in $InCsv) {
 
     $time = $CsvLine.Time
     $date = $CsvLine.Date
-	try {
-	$dateandtime = ([datetime]::ParseExact("$date $time", "yyyy-MM-dd HH:mm:ss.fff", $null)).ToUniversalTime()
-		write-output "EXCEPTION: Could not parse date and time '$date $time' using 'yyyy-MM-dd HH:mm:ss.fff' format"
-	$dateandtimestr = $dateandtime.ToString('yyyy-MM-ddTHH:mm:ss.ff')
-	}
-	catch [System.FormatException] {
-		"EXCEPTION: Could not convert date and time '$date $time' using 'yyyy-MM-dd HH:mm:ss.fff' format."
-		write-output "           Verify that the FrSky logfile Time column has the correct time data in it."
-		write-output "           The only valid format known as an example is '2022-05-30 14:23:04.243'"
-		exit 1
-	}
-	
+    try {
+        $dateandtime = ([datetime]::ParseExact("$date $time", "yyyy-MM-dd HH:mm:ss.fff", $null)).ToUniversalTime()
+    }
+    catch [System.FormatException] {
+        write-output "EXCEPTION: Could not convert date and time '$date $time' using 'yyyy-MM-dd HH:mm:ss.fff' format."
+        write-output "           Verify that the FrSky logfile Time column has the correct time data in it."
+        write-output "           The only valid format known as an example is '2022-05-30 14:23:04.243'"
+        exit 1
+    }
+
+    $dateandtimestr = $dateandtime.ToString('yyyy-MM-ddTHH:mm:ss.ff')
+
     [void]$OutString.Append("      <trkpt lat=`"$lat`" lon=`"$lon`">")
     [void]$OutString.Append("<ele>$eledbl</ele>")
-	[void]$OutString.Append("<time>${dateandtimestr}Z</time>")
+    [void]$OutString.Append("<time>${dateandtimestr}Z</time>")
     [void]$OutString.Append("</trkpt>`n")
 
     if ($Count -gt $NextDot) {
