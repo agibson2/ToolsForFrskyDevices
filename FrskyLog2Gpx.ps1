@@ -16,8 +16,11 @@ Source FrSky GPS log filename  (usually ends in .csv)
 Option to use the vario height data instead of the GPS height data... assuming
 you also have vario data in the logs.
 
-.PARAMETER UseLocalTime
-Option to output local time to the .gpx file
+.PARAMETER ForceUTC
+Option to output local time as UTC time to force ayvri.com site to show local
+time.  It makes the gpx file time wrong but it forces ayvri.com to show local
+time.  Only use this option for ayvri.com site if you want the time shown as
+local time instead of UTC.
 
 .EXAMPLE
 Frsky2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.csv
