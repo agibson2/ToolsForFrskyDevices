@@ -16,6 +16,9 @@ Source FrSky GPS log filename  (usually ends in .csv)
 Option to use the vario height data instead of the GPS height data... assuming
 you also have vario data in the logs.
 
+.PARAMETER UseLocalTime
+Option to output local time to the .gpx file
+
 .EXAMPLE
 Frsky2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.csv
 
@@ -25,6 +28,8 @@ https://github.com/agibson2/ToolsForFrskyDevices
 .NOTES
 Author: Adam Gibson  (StatiC) on rcgroups
 
+2022-06-01 1.0.8
+ Added -ForceUTC option to put logfile time as UTC time (which is wrong but causes ayvri.com site to display original local time
 2022-05-31 1.0.7
  Major fix for OpenTX GPS column formatted logfiles to flip latitude and longitude assignment of the combined GPS column data
 2022-05-30 1.0.6
@@ -51,7 +56,8 @@ Author: Adam Gibson  (StatiC) on rcgroups
 
 param(
     [Parameter(Mandatory=$true, HelpMessage="FrSky log filename")] [string]$filename,
-    [Parameter(HelpMessage="Use vario height data instead of GPS height data")] [switch]$UseVarioHeight
+    [Parameter(HelpMessage="Use vario height data instead of GPS height data")] [switch]$UseVarioHeight,
+    [Parameter(HelpMessage="Parse logfile time as UTC for sites like ayvri.com that always show UTC time")] [switch]$ForceUTC
 )
 
 if ("$filename" -eq "") {
@@ -192,7 +198,12 @@ ForEach ($CsvLine in $InCsv) {
     $time = $CsvLine.Time
     $date = $CsvLine.Date
     try {
-        $dateandtime = ([datetime]::ParseExact("$date $time", "yyyy-MM-dd HH:mm:ss.fff", $null)).ToUniversalTime()
+        if ($ForceUTC) {
+            # take time from logfile as UTC to force ayvri site to show local time
+            $dateandtime = [datetime]::ParseExact("$date $time", "yyyy-MM-dd HH:mm:ss.fff", $null)
+        } else {
+            $dateandtime = ([datetime]::ParseExact("$date $time", "yyyy-MM-dd HH:mm:ss.fff", $null)).ToUniversalTime()
+        }
     }
     catch [System.FormatException] {
         write-output "EXCEPTION: Could not convert date and time '$date $time' using 'yyyy-MM-dd HH:mm:ss.fff' format."
@@ -201,11 +212,11 @@ ForEach ($CsvLine in $InCsv) {
         exit 1
     }
 
-    $dateandtimestr = $dateandtime.ToString('yyyy-MM-ddTHH:mm:ss.ff')
+    $dateandtimestr = $dateandtime.ToString('yyyy-MM-ddTHH:mm:ss.ffZ')
 
     [void]$OutString.Append("      <trkpt lat=`"$lat`" lon=`"$lon`">")
     [void]$OutString.Append("<ele>$eledbl</ele>")
-    [void]$OutString.Append("<time>${dateandtimestr}Z</time>")
+    [void]$OutString.Append("<time>${dateandtimestr}</time>")
     [void]$OutString.Append("</trkpt>`n")
 
     if ($Count -gt $NextDot) {
