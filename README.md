@@ -12,7 +12,7 @@ Frsky2Gpx.ps1 -UseVarioHeight -Filename "C:\Users\Someuser\Documents\Arctus-2022
 
 - -Filename is the input FrSky logfile
 - -UseVarioHeight tells the script not to use the GPS height data and to use the vario height data instead.
-- -ForceUTC Parse the logfile as UTC instead of localtime to force ayvri.com to show local time.  The time is incorrect but it forces ayvri to show local time.  Only use this option for ayvri.com site. 
+- -ForceUTC Parse the logfile as UTC instead of localtime to force ayvri.com to show local time.  The time is incorrect but it forces ayvri to show local time.  Only use this option for ayvri.com site if you want the time shown as local time instead of UTC.
 
 The output .gpx file will be placed in the same directory as the source file.
 
