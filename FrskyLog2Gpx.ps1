@@ -104,7 +104,7 @@ ForEach ($AltLabel in $AltLabels) {
         $AltKey = $AltLabel.Name
         $ConvertToMeters = $True
         $ColumnUsed = $True
-    } elseif ( $UseVarioHeight -and (($AltLabel.Name -eq 'Alt(m)') -or ($AltLabel.Name -eq 'Altitude(ft)')) ) {
+    } elseif ( $UseVarioHeight -and (($AltLabel.Name -eq 'Alt(m)') -or ($AltLabel.Name -eq 'Altitude(m)')) ) {
         $AltMeters = $True
         $AltKey = $AltLabel.Name
         $ColumnUsed = $True
