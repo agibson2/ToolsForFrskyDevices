@@ -23,7 +23,7 @@ time.  Only use this option for ayvri.com site if you want the time shown as
 local time instead of UTC.
 
 .EXAMPLE
-Frsky2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.csv
+FrskyLog2Gpx.ps1 -UseVarioHeight -Filename "Arctus-2022-01-21-13-40-00.csv
 
 .LINK
 https://github.com/agibson2/ToolsForFrskyDevices
@@ -31,6 +31,9 @@ https://github.com/agibson2/ToolsForFrskyDevices
 .NOTES
 Author: Adam Gibson  (StatiC) on rcgroups
 
+2023-02-25 1.0.9
+ Added feature to detect language of OS to use for conversion.  This requires OS to be set to the same language as the transmitter settings for it to work.
+ Added -ForceEnglish option to not detect OS language to force english logfile parsing
 2022-06-01 1.0.8
  Added -ForceUTC option to put logfile time as UTC time (which is wrong but causes ayvri.com site to display original local time
 2022-05-31 1.0.7
@@ -60,8 +63,30 @@ Author: Adam Gibson  (StatiC) on rcgroups
 param(
     [Parameter(Mandatory=$true, HelpMessage="FrSky log filename")] [string]$filename,
     [Parameter(HelpMessage="Use vario height data instead of GPS height data")] [switch]$UseVarioHeight,
-    [Parameter(HelpMessage="Parse logfile time as UTC for sites like ayvri.com that always show UTC time")] [switch]$ForceUTC
+    [Parameter(HelpMessage="Parse logfile time as UTC for sites like ayvri.com that always show UTC time")] [switch]$ForceUTC,
+    [Parameter(HelpMessage="Force english language logfile parsing")] [switch]$ForceEnglish
 )
+
+$msgTable = Data {
+    #culture="en-US"
+    ConvertFrom-StringData -StringData @'
+    Altft = Alt(ft)
+    Altitudeft = Altitude(ft)
+    Altm = Alt(m)
+    Altitudem = Altitude(m)
+    Galtm = GAlt(m)
+    Gpsaltm = GPS Alt(m)
+    Galtft = GAlt(ft)
+    Gpsaltft = GPS Alt(ft)
+    Gps = GPS
+    Longitude = Longitude
+    Latitude = Latitude
+'@
+}
+
+if (-not $ForceEnglish) {
+    Import-LocalizedData -BindingVariable msgTable
+}
 
 if ("$filename" -eq "") {
     write-output "Filename expected as first argument"
@@ -99,32 +124,32 @@ $ColumnUsed = $False
 
 $AltLabels = Get-member -InputObject $InCsv[0] | Where-Object {$_.MemberType -eq "NoteProperty"} | select-Object Name
 ForEach ($AltLabel in $AltLabels) {
-    if ( $UseVarioHeight -and (($AltLabel.Name -eq 'Alt(ft)') -or ($AltLabel.Name -eq 'Altitude(ft)')) ) {
+    if ( $UseVarioHeight -and (($AltLabel.Name -eq $msgTable.Altft) -or ($AltLabel.Name -eq $msgTable.Altitudeft)) ) {
         $AltFeet = $True
         $AltKey = $AltLabel.Name
         $ConvertToMeters = $True
         $ColumnUsed = $True
-    } elseif ( $UseVarioHeight -and (($AltLabel.Name -eq 'Alt(m)') -or ($AltLabel.Name -eq 'Altitude(m)')) ) {
+    } elseif ( $UseVarioHeight -and (($AltLabel.Name -eq $msgTable.Altm) -or ($AltLabel.Name -eq $msgTable.Altitudem)) ) {
         $AltMeters = $True
         $AltKey = $AltLabel.Name
         $ColumnUsed = $True
-    } elseif ( -Not $UseVarioHeight -and (($AltLabel.Name -eq 'GAlt(m)') -or ($AltLabel.Name -eq 'GPS Alt(m)')) ){
+    } elseif ( -Not $UseVarioHeight -and (($AltLabel.Name -eq $msgTable.Galtm) -or ($AltLabel.Name -eq $msgTable.Gpsaltm)) ){
         $GAltMeters = $True
         $AltKey = $AltLabel.Name
         $ColumnUsed = $True
-    } elseif ( -Not $UseVarioHeight -and (($AltLabel.Name -eq 'GAlt(ft)') -or ($AltLabel.Name -eq 'GPS Alt(ft)')) ){
+    } elseif ( -Not $UseVarioHeight -and (($AltLabel.Name -eq $msgTable.Galtft) -or ($AltLabel.Name -eq $msgTable.Gpsaltft)) ){
         $GAltFeet = $True
         $AltKey = $AltLabel.Name
         $ConvertToMeters = $True
         $ColumnUsed = $True
-    } elseif ($altLabel.Name -eq 'GPS') {
+    } elseif ($altLabel.Name -eq $msgTable.Gps) {
         $GpsInSingleColumn = $True
         $GPSKey = $altLabel.Name
         $ColumnUsed = $True
-    } elseif ($altLabel.Name -eq 'Longitude') {
+    } elseif ($altLabel.Name -eq $msgTable.Longitude) {
         $LongitudeKey = $altLabel.Name
         $ColumnUsed = $True
-    } elseif ($altLabel.Name -eq 'Latitude') {
+    } elseif ($altLabel.Name -eq $msgTable.Latitude) {
         $LatitudeKey = $altLabel.Name
         $ColumnUsed = $True
     }
