@@ -31,6 +31,8 @@ https://github.com/agibson2/ToolsForFrskyDevices
 .NOTES
 Author: Adam Gibson  (StatiC) on rcgroups
 
+2023-02-26 1.0.10
+ Fixed error message (but still worked) when en-US locale
 2023-02-25 1.0.9
  Added feature to detect language of OS to use for conversion.  This requires OS to be set to the same language as the transmitter settings for it to work.
  Added -ForceEnglish option to not detect OS language to force english logfile parsing
@@ -84,8 +86,12 @@ $msgTable = Data {
 '@
 }
 
-if (-not $ForceEnglish) {
-    Import-LocalizedData -BindingVariable msgTable
+# Add locales that we support or default to English
+if ( (get-culture).Name -ne "en-US" ) {
+    # Don't parse as different locales other than english if forced to be english
+    if ( -not $ForceEnglish ) {
+        Import-LocalizedData -BindingVariable msgTable
+    }
 }
 
 if ("$filename" -eq "") {
