@@ -1,7 +1,7 @@
 # ToolsForFrskyDevices
 Script and tools to use with FrSky devices
 
-The first tool is a powershell script to convert FrSky logfiles to .gpx file format for use in sites like https://ayvri.com.
+The first tool is a powershell script to convert FrSky logfiles to .gpx file format for use in sites like https://ayvri.com (shutting down) and https://www.sportstracklive.com/
 
 ## FrSkyLog2Gpx.ps1
 It has an option to use the vario height for height data instead of using GPS height data.  GPS height data is inherently less accurate than vaio data.
